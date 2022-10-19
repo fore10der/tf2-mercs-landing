@@ -6,17 +6,6 @@
 
     let width: number = 0
 
-    const calculateSlidesToRender = (slides: string[], index: number) => {
-
-        if (index === 0) {
-            return [slides.at(-1)].concat(slides.slice(0, 2))
-        }
-        if (index === slides.length - 1) {
-            return slides.slice(-2).concat(slides.at(0))
-        }
-        return slides.slice(index - 1, index + 2)
-    }
-
     const nextSlide = () => {
         if (index === slides.length - 1) {
             return index = 0
@@ -32,22 +21,19 @@
     }
 
     $: containerStyle = `width: ${width}px; height: ${width * 0.375}px`
-    $: slidesContainerStyle = `width: 100%; transform: translate(-${width / 2}px); perspective: ${width}px;`
-    $: slidesToRender = calculateSlidesToRender(slides, index)
+    $: slidesContainerStyle = `perspective: ${width / 2}px;`
 </script>
 
 <div class="container" style="{containerStyle}" use:parentWidth={(newWidth) => width = newWidth}>
     <div style="{slidesContainerStyle}" class="slides-container" >
-        { #each slidesToRender as slide, index}
-            { #if (index != 1) }
-                <div class:slide class:slide-left={index === 0} class:slide-right={index === 2}>
-                    <video src={slide} autoplay muted loop width='100%'></video>
-                </div>
-            { :else }
-                <div class:slide class:slide-central={true}>
-                    <video src={slide} autoplay muted loop width='100%'></video>
-                </div>
-            { /if }
+        { #each slides as slide, slideIndex}
+            <div class:slide
+                 class:slide-left={slideIndex === index - 1 || index === 0 && slideIndex === slides.length - 1}
+                 class:slide-central={index === slideIndex}
+                 class:slide-right={slideIndex === index + 1 || index === slides.length - 1 && slideIndex === 0}
+            >
+                <video src={slide} autoplay muted loop width='100%'></video>
+            </div>
         {/each}
     </div>
     <div class="button-navigation-container button-navigation-prev">
@@ -85,22 +71,33 @@
         left: 0;
     }
     .slides-container {
+      width: 100%;
+      justify-content: center;
+      perspective-origin: 50% 50%;
       position: relative;
       display: flex;
       flex-direction: row;
-      perspective-origin: 50% 50%;
     }
     .slide {
       width: 66%;
+      display: none;
       flex-shrink: 0;
     }
+    .slide-central {
+      display: block;
+      order: 1;
+    }
     .slide-left {
+      display: block;
       transform: rotateY(30deg);
       transform-origin: right center;
+      order: 0;
     }
     .slide-right {
+      display: block;
       transform: rotateY(-30deg);
       transform-origin: left center;
+      order: 2;
     }
     .slide-central {
       position: relative;
